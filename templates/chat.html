@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Medi-Chat</title>
+  <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/3774/3774293.png">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: monospace;
+      background-color: #222;
+      color: #fff;
+      padding: 20px;
+      margin: 0;
+    }
+    .cli-container {
+      border: 1px solid #666;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #333;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    .cli-line {
+      margin-bottom: 5px;
+    }
+    .prompt {
+      color: #0f0;
+    }
+    .command {
+      color: #00f;
+    }
+
+    .console-input {
+      background-color: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      min-width: calc(100% - 2em);
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="cli-container">
+    <div class="cli-line">
+      <span class="prompt">Query:</span><span class="command">~$</span>
+      <span id="output"></span>
+    </div>
+    <textarea autofocus class='console-input' id="input" placeholder="Type query..."></textarea>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      const inputElement = $("#input");
+      const outputElement = $("#output");
+
+      inputElement.keyup(function(event) {
+        if (event.key === "Enter") {
+          const command = inputElement.val();
+          executeCommand(command);
+        }
+      });
+
+      async function executeCommand(command) {
+        outputElement.append(`<div class="cli-line"><span class="prompt">Query:</span><span class="command">~$</span> ${command}</div>`);
+
+        const loadingLine = $("<div>").addClass("cli-line").html("<span class='loading'>Processing...</span>");
+        outputElement.append(loadingLine);
+
+        try {
+          const response = await processCommandAsync(command);
+          loadingLine.remove();
+          const responseLine = $("<div>").addClass("cli-line").html(`<span class="prompt">Query:</span><span class="command">~$</span> ${command}<br>${response}`);
+          outputElement.append(responseLine);
+        } catch (error) {
+          loadingLine.remove();
+          const errorLine = $("<div>").addClass("cli-line").html(`<span class="error">Error: ${error}</span>`);
+          outputElement.append(errorLine);
+        }
+
+        inputElement.val("");
+      }
+
+      function processCommandAsync(command) {
+        return new Promise((resolve, reject) => {
+          $.get("/answer?q=" + command, (data, status) => {
+            resolve("<br>" + data["answer"] + "<br><br>" + "References: " + data["references"] + "<br><br>");
+          });
+        });
+      }
+    });
+  </script>
+</body>
+</html>

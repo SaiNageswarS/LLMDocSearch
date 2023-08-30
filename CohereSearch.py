@@ -3,10 +3,9 @@ import os
 from EmbedUtil import model, index, PINECONE_COLLECTION
 import cohere
 co = cohere.Client(os.environ.get("COHERE_API_KEY"))
-from textwrap import wrap
 
 
-def search(query:str):
+def search(query: str):
     query_embedding = model.encode(query.lower())
     res = index.query(
         vector=query_embedding.tolist(),
@@ -25,9 +24,6 @@ def search(query:str):
     references = set([rankedRes.document["reference"] for rankedRes in re_rank_res.results])
 
     context = ". ".join(context_arr)
-    print("context: ")
-    for line in wrap(context, width=100):
-        print(line)
 
     # prepare prompt
     prompt = f"""
@@ -41,21 +37,21 @@ def search(query:str):
 
     prediction = co.generate(
         prompt=prompt,
-        max_tokens=500,
+        max_tokens=1024,
         model="command-nightly",
         temperature=0.5,
-        num_generations=1
+        num_generations=3
     )
 
-    print("\n\n\nAnswer:\n----------------------\n ")
+    answer = "answer is not available"
     for gen in prediction.generations:
-        for line in wrap(gen, width=100):
-            print(line)
-        print("\n------------\n")
+        if "answer is not available" in gen:
+            continue
 
-    print("References: ")
-    for ref in references:
-        print(ref)
+        if len(gen) > len(answer):
+            answer = gen
+
+    return answer, references, context
 
 
 if __name__ == '__main__':

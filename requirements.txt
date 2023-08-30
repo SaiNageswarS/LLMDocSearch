@@ -1,3 +1,5 @@
 tika==2.6.0
 sentence-transformers===2.2.2
 pinecone-client===2.2.2
+flask
+cohere
